@@ -1,0 +1,138 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ragbrain"
+version = "0.1.0"
+description = "Personal AI-powered knowledge base with RAG"
+readme = "../README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "RAGBrain Contributors"}
+]
+keywords = ["rag", "ai", "knowledge-base", "llm", "vector-database", "semantic-search"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "python-multipart>=0.0.6",
+    "langchain>=0.1.6",
+    "langchain-community>=0.0.20",
+    "langchain-openai>=0.0.5",
+    "langchain-anthropic>=0.1.1",
+    "qdrant-client>=1.7.3",
+    "pypdf2>=3.0.1",
+    "pdfplumber>=0.10.3",
+    "ebooklib>=0.18",
+    "python-docx>=1.1.0",
+    "python-pptx>=0.6.23",
+    "beautifulsoup4>=4.12.3",
+    "lxml>=5.1.0",
+    "markdown>=3.5.2",
+    "webvtt-py>=0.4.6",
+    "python-dotenv>=1.0.1",
+    "tiktoken>=0.5.2",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
+    "click>=8.1.7",
+    "rich>=13.7.0",
+    "tqdm>=4.66.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "httpx>=0.25.0",
+    "mypy>=1.0.0",
+    "ruff>=0.1.0",
+]
+pinecone = [
+    "pinecone-client>=3.0.0",
+]
+chroma = [
+    "chromadb>=0.4.22",
+]
+redis = [
+    "redis>=5.0.0",
+]
+docling = [
+    "docling>=2.0.0",
+]
+
+[project.scripts]
+ragbrain = "ragbrain.cli.__main__:cli"
+ragbrain-import = "ragbrain.cli.import_cmd:import_directory"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/ragbrain"
+Documentation = "https://github.com/yourusername/ragbrain#readme"
+Repository = "https://github.com/yourusername/ragbrain"
+Issues = "https://github.com/yourusername/ragbrain/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ragbrain*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["ragbrain"]
+branch = true
+omit = ["tests/*", "*/migrations/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "B008",  # do not perform function calls in argument defaults
+]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
