@@ -16,7 +16,7 @@ class CohereEmbeddingProvider(EmbeddingProvider):
         self._dimensions = 1024  # Cohere embed-english-v3.0 is 1024
 
     def embed(self, text: str) -> List[float]:
-        """Generate embedding for single text"""
+        """Generate embedding for single text (for documents)"""
         response = self.client.embed(
             texts=[text],
             model=self.model,
@@ -24,8 +24,17 @@ class CohereEmbeddingProvider(EmbeddingProvider):
         )
         return response.embeddings[0]
 
+    def embed_query(self, text: str) -> List[float]:
+        """Generate embedding for search query"""
+        response = self.client.embed(
+            texts=[text],
+            model=self.model,
+            input_type="search_query"
+        )
+        return response.embeddings[0]
+
     def embed_batch(self, texts: List[str]) -> List[List[float]]:
-        """Generate embeddings for multiple texts"""
+        """Generate embeddings for multiple texts (for documents)"""
         response = self.client.embed(
             texts=texts,
             model=self.model,

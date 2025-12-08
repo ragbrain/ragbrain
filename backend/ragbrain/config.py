@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     """Application settings with support for multiple providers"""
 
     # ===== LLM Provider =====
-    llm_provider: Literal["anthropic", "openai", "ollama", "fallback"] = "fallback"  # Default to fallback (Ollama -> Anthropic)
+    llm_provider: Literal["anthropic", "openai", "ollama", "bedrock", "fallback"] = "fallback"  # Default to fallback (Ollama -> Anthropic)
     llm_model: str | None = None
 
     # ===== Ollama Configuration =====
@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     fallback_secondary: Literal["ollama", "openai", "anthropic"] = "anthropic"
 
     # ===== Embedding Provider =====
-    embedding_provider: Literal["openai", "cohere", "ollama", "mixedbread", "fallback"] = "openai"
+    embedding_provider: Literal["openai", "cohere", "ollama", "mixedbread", "bedrock", "fallback"] = "openai"
     embedding_model: str | None = None
     embedding_dimension: int = 1536
 
@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     embedding_fallback_secondary: Literal["ollama", "openai", "cohere", "mixedbread"] = "mixedbread"
 
     # ===== Vector Database Provider =====
-    vectordb_provider: Literal["qdrant", "pinecone", "chroma"] = "qdrant"
+    vectordb_provider: Literal["qdrant", "pinecone", "chroma", "s3vectors"] = "qdrant"
 
     # ===== Mixedbread Configuration =====
     mixedbread_api_key: str | None = None
@@ -48,7 +48,7 @@ class Settings(BaseSettings):
 
     # ===== Namespace Configuration =====
     default_namespace: str | None = None  # Optional default namespace for multi-user setups
-    namespace_provider: Literal["sqlite", "redis"] = "sqlite"  # Namespace registry provider
+    namespace_provider: Literal["sqlite", "redis", "dynamodb"] = "sqlite"  # Namespace registry provider
     namespace_db_path: str = "data/namespaces.db"  # Path to SQLite database for namespaces
 
     # ===== Redis Configuration (for namespace provider) =====
@@ -73,6 +73,20 @@ class Settings(BaseSettings):
     chroma_port: int = 8000
     chroma_ssl: bool = False
     chroma_api_key: str | None = None
+
+    # ===== AWS Configuration =====
+    aws_region: str = "us-east-1"
+
+    # ===== S3 Vectors Configuration =====
+    s3vectors_bucket: str | None = None  # Vector bucket name
+    s3vectors_index: str = "ragbrain"  # Index name within bucket
+
+    # ===== DynamoDB Configuration =====
+    dynamodb_namespace_table: str = "ragbrain-namespaces"  # Table for namespace registry
+
+    # ===== Bedrock Configuration =====
+    bedrock_llm_model: str = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+    bedrock_embedding_model: str = "amazon.titan-embed-text-v2:0"
 
     # ===== Reranker Configuration =====
     reranker_provider: Literal["simple", "ollama", "cohere", "none"] = "simple"  # Default to simple local reranker
@@ -105,6 +119,7 @@ class Settings(BaseSettings):
             "anthropic": "claude-3-7-sonnet-20250219",
             "openai": "gpt-4-turbo-preview",
             "ollama": self.ollama_model,
+            "bedrock": self.bedrock_llm_model,
             "fallback": self.ollama_model,  # Primary model for fallback
         }
         return defaults.get(self.llm_provider, "claude-3-7-sonnet-20250219")
@@ -119,6 +134,7 @@ class Settings(BaseSettings):
             "cohere": "embed-english-v3.0",
             "ollama": self.ollama_embedding_model,
             "mixedbread": self.mixedbread_model,
+            "bedrock": self.bedrock_embedding_model,
             "fallback": self.ollama_embedding_model,  # Primary model for fallback
         }
         return defaults.get(self.embedding_provider, "text-embedding-3-small")
@@ -146,6 +162,12 @@ class Settings(BaseSettings):
                 "deepset-mxbai-embed-de-large-v1": 1024,
                 "mxbai-embed-2d-large-v1": 1024,
             },
+            "bedrock": {
+                "amazon.titan-embed-text-v1": 1536,
+                "amazon.titan-embed-text-v2:0": 1024,
+                "cohere.embed-english-v3": 1024,
+                "cohere.embed-multilingual-v3": 1024,
+            },
         }
 
         # For fallback, use primary provider's dimensions
@@ -156,6 +178,40 @@ class Settings(BaseSettings):
         provider_models = dimension_map.get(provider, {})
         model = self.get_embedding_model()
         return provider_models.get(model, self.embedding_dimension)
+
+    def validate_aws_config(self) -> None:
+        """Validate AWS-specific configuration when AWS providers are selected
+
+        Raises:
+            ValueError: If required AWS settings are missing for selected providers
+        """
+        errors = []
+
+        # Check S3 Vectors configuration
+        if self.vectordb_provider == "s3vectors":
+            if not self.s3vectors_bucket:
+                errors.append(
+                    "S3VECTORS_BUCKET environment variable is required when vectordb_provider='s3vectors'"
+                )
+
+        # Check DynamoDB configuration
+        if self.namespace_provider == "dynamodb":
+            if not self.dynamodb_namespace_table:
+                errors.append(
+                    "DYNAMODB_NAMESPACE_TABLE environment variable is required when namespace_provider='dynamodb'"
+                )
+
+        # Check Bedrock configuration
+        if self.llm_provider == "bedrock" or self.embedding_provider == "bedrock":
+            if not self.aws_region:
+                errors.append(
+                    "AWS_REGION environment variable is required when using Bedrock providers"
+                )
+
+        if errors:
+            raise ValueError(
+                "AWS configuration validation failed:\n  - " + "\n  - ".join(errors)
+            )
 
 
 # Global settings instance

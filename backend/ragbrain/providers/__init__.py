@@ -24,6 +24,14 @@ if _REDIS_AVAILABLE:
     from .namespace.redis_provider import RedisNamespaceProvider
     NamespaceProviderFactory.register("redis", RedisNamespaceProvider)
 
+# DynamoDB provider - only import if boto3 is available
+try:
+    import boto3 as _boto3_check  # noqa: F401
+    from .namespace.dynamodb import DynamoDBNamespaceProvider
+    NamespaceProviderFactory.register("dynamodb", DynamoDBNamespaceProvider)
+except ImportError:
+    pass
+
 __all__ = [
     'EmbeddingProvider',
     'LLMProvider',

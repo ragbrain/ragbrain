@@ -19,4 +19,11 @@ try:
 except ImportError:
     pass
 
+# S3 Vectors provider (optional - requires boto3)
+try:
+    from .s3vectors import S3VectorsProvider
+    VectorDBProviderFactory.register('s3vectors', S3VectorsProvider)
+except ImportError:
+    pass
+
 __all__ = ['QdrantVectorDBProvider']

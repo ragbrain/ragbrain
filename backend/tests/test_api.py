@@ -69,7 +69,8 @@ class TestQueryEndpoint:
             question="Test query",
             top_k=10,
             synthesize=True,
-            namespace=None
+            namespace=None,
+            rerank=True
         )
 
     def test_query_without_synthesis(self, test_client, mock_pipeline):
@@ -88,9 +89,10 @@ class TestQueryEndpoint:
         assert response.status_code == 200
         mock_pipeline.query.assert_called_with(
             question="Test query",
-            top_k=5,
+            top_k=20,
             synthesize=False,
-            namespace=None
+            namespace=None,
+            rerank=True
         )
 
     def test_query_with_namespace(self, test_client, mock_pipeline):
@@ -103,9 +105,10 @@ class TestQueryEndpoint:
         assert response.status_code == 200
         mock_pipeline.query.assert_called_with(
             question="Test query",
-            top_k=5,
+            top_k=20,
             synthesize=True,
-            namespace="test-ns"
+            namespace="test-ns",
+            rerank=True
         )
 
     def test_query_missing_query_field(self, test_client):
@@ -148,7 +151,7 @@ class TestCaptureEndpoint:
         response = test_client.post(
             "/api/capture",
             json={
-                "content": "This is a test thought to capture."
+                "text": "This is a test thought to capture."
             }
         )
 
@@ -161,7 +164,7 @@ class TestCaptureEndpoint:
         response = test_client.post(
             "/api/capture",
             json={
-                "content": "Test content",
+                "text": "Test content",
                 "metadata": {"topic": "testing", "source": "unit-test"}
             }
         )
@@ -176,7 +179,7 @@ class TestCaptureEndpoint:
         response = test_client.post(
             "/api/capture",
             json={
-                "content": "Test content",
+                "text": "Test content",
                 "namespace": "personal/notes"
             }
         )

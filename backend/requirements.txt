@@ -30,8 +30,15 @@ pydantic-settings>=2.3.0
 click==8.1.7
 rich==13.7.0
 
-# Redis (for namespace provider)
+# Redis (for namespace provider - optional)
 redis>=5.0.0
+
+# AWS (for Lambda, Bedrock, S3 Vectors, DynamoDB - optional)
+# For AWS Lambda deployment, install these additionally:
+#   pip install mangum>=0.17.0 boto3>=1.34.0
+# Or use: pip install -r requirements-aws.txt
+# mangum>=0.17.0
+# boto3>=1.34.0
 
 # Testing
 pytest>=7.0.0
