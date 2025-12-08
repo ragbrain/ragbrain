@@ -212,13 +212,14 @@ class TestEmbeddingProviderFactory:
         del EmbeddingProviderFactory._providers["test_embedding"]
 
     def test_create_unknown_provider(self):
-        """Should raise error for unknown provider"""
+        """Should raise validation error for unknown provider"""
         from ragbrain.config import Settings
+        from pydantic import ValidationError
 
-        settings = Settings(embedding_provider="nonexistent")
-        with pytest.raises(ValueError) as exc_info:
-            EmbeddingProviderFactory.create(settings)
-        assert "Unknown embedding provider" in str(exc_info.value)
+        # Pydantic validates provider names, so invalid names raise ValidationError
+        with pytest.raises(ValidationError) as exc_info:
+            settings = Settings(embedding_provider="nonexistent")
+        assert "embedding_provider" in str(exc_info.value)
 
     def test_get_available_providers(self):
         """Should list available providers"""
@@ -253,13 +254,14 @@ class TestLLMProviderFactory:
         del LLMProviderFactory._providers["test_llm"]
 
     def test_create_unknown_provider(self):
-        """Should raise error for unknown provider"""
+        """Should raise validation error for unknown provider"""
         from ragbrain.config import Settings
+        from pydantic import ValidationError
 
-        settings = Settings(llm_provider="nonexistent")
-        with pytest.raises(ValueError) as exc_info:
-            LLMProviderFactory.create(settings)
-        assert "Unknown LLM provider" in str(exc_info.value)
+        # Pydantic validates provider names, so invalid names raise ValidationError
+        with pytest.raises(ValidationError) as exc_info:
+            settings = Settings(llm_provider="nonexistent")
+        assert "llm_provider" in str(exc_info.value)
 
     def test_get_available_providers(self):
         """Should list available providers"""
@@ -299,13 +301,14 @@ class TestVectorDBProviderFactory:
         del VectorDBProviderFactory._providers["test_vectordb"]
 
     def test_create_unknown_provider(self):
-        """Should raise error for unknown provider"""
+        """Should raise validation error for unknown provider"""
         from ragbrain.config import Settings
+        from pydantic import ValidationError
 
-        settings = Settings(vectordb_provider="nonexistent")
-        with pytest.raises(ValueError) as exc_info:
-            VectorDBProviderFactory.create(settings)
-        assert "Unknown vector DB provider" in str(exc_info.value)
+        # Pydantic validates provider names, so invalid names raise ValidationError
+        with pytest.raises(ValidationError) as exc_info:
+            settings = Settings(vectordb_provider="nonexistent")
+        assert "vectordb_provider" in str(exc_info.value)
 
     def test_get_available_providers(self):
         """Should list available providers"""
@@ -354,10 +357,11 @@ class TestNamespaceProviderFactory:
         del NamespaceProviderFactory._providers["test_namespace"]
 
     def test_create_unknown_provider(self):
-        """Should raise error for unknown provider"""
+        """Should raise validation error for unknown provider"""
         from ragbrain.config import Settings
+        from pydantic import ValidationError
 
-        settings = Settings(namespace_provider="nonexistent")
-        with pytest.raises(ValueError) as exc_info:
-            NamespaceProviderFactory.create(settings)
-        assert "Unknown namespace provider" in str(exc_info.value)
+        # Pydantic validates provider names, so invalid names raise ValidationError
+        with pytest.raises(ValidationError) as exc_info:
+            settings = Settings(namespace_provider="nonexistent")
+        assert "namespace_provider" in str(exc_info.value)

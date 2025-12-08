@@ -76,3 +76,14 @@ async def startup_event():
 async def shutdown_event():
     """Cleanup on shutdown"""
     logger.info("Shutting down RAGBrain API...")
+
+
+# Lambda handler for AWS Lambda deployment via Mangum
+# Use lifespan="off" for Lambda - execution environment persists between invocations
+# so startup events only need to run once per container lifecycle, not per request
+try:
+    from mangum import Mangum
+    handler = Mangum(app, lifespan="off")
+except ImportError:
+    # Mangum not installed - not deploying to Lambda
+    handler = None

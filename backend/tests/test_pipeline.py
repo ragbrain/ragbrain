@@ -81,7 +81,8 @@ class TestRAGPipeline:
         assert result["chunks_created"] > 0
         assert "ids" in result
         assert "doc_id" in result
-        mock_pipeline._vectordb_provider.insert.assert_called_once()
+        # Pipeline calls insert twice: once for chunks, once for document summary
+        assert mock_pipeline._vectordb_provider.insert.call_count == 2
 
     def test_ingest_text_with_namespace(self, mock_pipeline):
         """Test text ingestion with namespace"""

@@ -509,8 +509,8 @@ class RAGPipeline:
         """
         logger.info(f"Querying: {question} (synthesize={synthesize}, namespace={namespace}, rerank={rerank})")
 
-        # Generate query embedding
-        query_embedding = self.embedding_provider.embed(question)
+        # Generate query embedding (uses embed_query for providers that differentiate)
+        query_embedding = self.embedding_provider.embed_query(question)
 
         # Use provided namespace or default from config
         ns = namespace or self.config.default_namespace

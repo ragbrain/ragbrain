@@ -19,6 +19,13 @@ try:
 except ImportError:
     pass
 
+# Bedrock provider (optional - requires boto3)
+try:
+    from .bedrock import BedrockEmbeddingProvider
+    EmbeddingProviderFactory.register('bedrock', BedrockEmbeddingProvider)
+except ImportError:
+    pass
+
 __all__ = [
     'OpenAIEmbeddingProvider',
     'OllamaEmbeddingProvider',

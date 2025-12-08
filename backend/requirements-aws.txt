@@ -1,0 +1,11 @@
+# AWS dependencies for serverless deployment
+# Install with: pip install -r requirements-aws.txt
+
+# Lambda ASGI adapter
+mangum>=0.17.0
+
+# AWS SDK for Python
+boto3>=1.34.0
+
+# Also install base requirements:
+# pip install -r requirements.txt

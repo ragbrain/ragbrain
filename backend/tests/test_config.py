@@ -171,9 +171,14 @@ class TestSettings:
         assert settings.fallback_primary == "ollama"
         assert settings.fallback_secondary == "anthropic"
 
-    def test_api_keys_optional(self):
+    def test_api_keys_optional(self, monkeypatch):
         """Test that API keys are optional"""
         from ragbrain.config import Settings
+
+        # Clear any environment variables that might set API keys
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        monkeypatch.delenv("COHERE_API_KEY", raising=False)
 
         settings = Settings()
         assert settings.anthropic_api_key is None
@@ -209,3 +214,159 @@ class TestGlobalSettings:
         from ragbrain.config import settings, Settings
 
         assert isinstance(settings, Settings)
+
+
+class TestAWSConfigValidation:
+    """Tests for AWS configuration validation"""
+
+    def test_validate_s3vectors_missing_bucket(self):
+        """Should raise ValueError when S3 Vectors bucket is not configured"""
+        from ragbrain.config import Settings
+
+        settings = Settings(
+            vectordb_provider="s3vectors",
+            s3vectors_bucket=None  # Missing required config
+        )
+
+        with pytest.raises(ValueError) as exc_info:
+            settings.validate_aws_config()
+
+        assert "S3VECTORS_BUCKET" in str(exc_info.value)
+        assert "required" in str(exc_info.value)
+
+    def test_validate_dynamodb_missing_table(self):
+        """Should raise ValueError when DynamoDB table is not configured"""
+        from ragbrain.config import Settings
+
+        settings = Settings(
+            namespace_provider="dynamodb",
+            dynamodb_namespace_table=""  # Missing required config
+        )
+
+        with pytest.raises(ValueError) as exc_info:
+            settings.validate_aws_config()
+
+        assert "DYNAMODB_NAMESPACE_TABLE" in str(exc_info.value)
+        assert "required" in str(exc_info.value)
+
+    def test_validate_bedrock_missing_region(self):
+        """Should raise ValueError when Bedrock is used without AWS region"""
+        from ragbrain.config import Settings
+
+        settings = Settings(
+            llm_provider="bedrock",
+            aws_region=""  # Missing required config
+        )
+
+        with pytest.raises(ValueError) as exc_info:
+            settings.validate_aws_config()
+
+        assert "AWS_REGION" in str(exc_info.value)
+        assert "required" in str(exc_info.value)
+
+    def test_validate_bedrock_embedding_missing_region(self):
+        """Should raise ValueError when Bedrock embeddings used without AWS region"""
+        from ragbrain.config import Settings
+
+        settings = Settings(
+            embedding_provider="bedrock",
+            aws_region=""
+        )
+
+        with pytest.raises(ValueError) as exc_info:
+            settings.validate_aws_config()
+
+        assert "AWS_REGION" in str(exc_info.value)
+
+    def test_validate_multiple_aws_errors(self):
+        """Should report all AWS configuration errors at once"""
+        from ragbrain.config import Settings
+
+        settings = Settings(
+            vectordb_provider="s3vectors",
+            namespace_provider="dynamodb",
+            s3vectors_bucket=None,
+            dynamodb_namespace_table=""
+        )
+
+        with pytest.raises(ValueError) as exc_info:
+            settings.validate_aws_config()
+
+        error_msg = str(exc_info.value)
+        assert "S3VECTORS_BUCKET" in error_msg
+        assert "DYNAMODB_NAMESPACE_TABLE" in error_msg
+
+    def test_validate_aws_config_passes_when_configured(self):
+        """Should pass validation when all AWS configs are present"""
+        from ragbrain.config import Settings
+
+        settings = Settings(
+            vectordb_provider="s3vectors",
+            namespace_provider="dynamodb",
+            llm_provider="bedrock",
+            embedding_provider="bedrock",
+            s3vectors_bucket="test-bucket",
+            dynamodb_namespace_table="test-table",
+            aws_region="us-east-1"
+        )
+
+        # Should not raise
+        settings.validate_aws_config()
+
+    def test_validate_non_aws_providers_skipped(self):
+        """Should not validate when non-AWS providers are used"""
+        from ragbrain.config import Settings
+
+        settings = Settings(
+            vectordb_provider="qdrant",
+            namespace_provider="sqlite",
+            llm_provider="anthropic"
+        )
+
+        # Should not raise even though AWS configs are missing
+        settings.validate_aws_config()
+
+    def test_aws_defaults(self):
+        """Test AWS default configuration values"""
+        from ragbrain.config import Settings
+
+        settings = Settings()
+        assert settings.aws_region == "us-east-1"
+        assert settings.s3vectors_index == "ragbrain"
+        assert settings.dynamodb_namespace_table == "ragbrain-namespaces"
+        assert settings.bedrock_llm_model == "anthropic.claude-3-5-sonnet-20241022-v2:0"
+        assert settings.bedrock_embedding_model == "amazon.titan-embed-text-v2:0"
+
+    def test_bedrock_model_in_get_llm_model(self):
+        """Test Bedrock model in get_llm_model"""
+        from ragbrain.config import Settings
+
+        settings = Settings(llm_provider="bedrock")
+        model = settings.get_llm_model()
+        assert "anthropic.claude" in model or "claude" in model.lower()
+
+    def test_bedrock_model_in_get_embedding_model(self):
+        """Test Bedrock model in get_embedding_model"""
+        from ragbrain.config import Settings
+
+        settings = Settings(embedding_provider="bedrock")
+        model = settings.get_embedding_model()
+        assert "titan" in model.lower() or "amazon" in model.lower()
+
+    def test_bedrock_embedding_dimensions(self):
+        """Test embedding dimensions for Bedrock models"""
+        from ragbrain.config import Settings
+
+        # Titan v2
+        settings = Settings(
+            embedding_provider="bedrock",
+            bedrock_embedding_model="amazon.titan-embed-text-v2:0"
+        )
+        assert settings.get_embedding_dimensions() == 1024
+
+        # Cohere on Bedrock
+        settings = Settings(
+            embedding_provider="bedrock",
+            bedrock_embedding_model="cohere.embed-english-v3"
+        )
+        assert settings.get_embedding_dimensions() == 1024

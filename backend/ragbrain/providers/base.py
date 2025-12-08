@@ -43,6 +43,22 @@ class EmbeddingProvider(ABC):
         """
         pass
 
+    def embed_query(self, text: str) -> List[float]:
+        """
+        Generate embedding for a search query.
+
+        Some embedding models (e.g., Cohere) use different parameters for
+        queries vs documents. Override this method if your provider needs
+        different behavior for query embeddings.
+
+        Args:
+            text: Query text to embed
+
+        Returns:
+            List of floats representing the embedding vector
+        """
+        return self.embed(text)
+
     def get_name(self) -> str:
         """Get provider name"""
         return self.__class__.__name__
