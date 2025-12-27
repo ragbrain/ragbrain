@@ -1,3 +1,7 @@
+# Deprecated
+
+This project has moved to [stache-ai](https://github.com/stache-ai/stache-ai) - it is no longer maintained here.
+
 # RAGBrain 🧠
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
